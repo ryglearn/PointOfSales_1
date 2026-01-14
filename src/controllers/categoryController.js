@@ -7,15 +7,15 @@ export default {
       // const page = parseInt(req.query.page) || 1;
       // const limit = parseInt(req.query.limit) || 10;
       // const search = req.query.search || "";
-      const {page, limit, search} = req.validatedQuery;
+      const {page, limit, search} = req.validatedQuery; // diambil dari respons auth validate zod
       const offset = (page - 1) * limit;
 
       let countQuery = "SELECT COUNT(*) as total FROM categories";
       let countParams = [];
 
       if (search) {
-        countQuery += " WHERE category_code LIKE ? OR name LIKE ?";
-        countParams.push(`%${search}%`, `%${search}%`);
+        countQuery += " WHERE category_code LIKE ? OR name LIKE ?"; // menambahkan query jika search diketik di query
+        countParams.push(`%${search}%`, `%${search}%`); // menambahkan parameter ke array
       }
 
       const [countRows] = await pool.execute(countQuery, countParams);
@@ -33,7 +33,7 @@ export default {
       }
 
       mainQuery += " ORDER BY id DESC LIMIT ? OFFSET ?";
-      mainParams.push(String(limit), String(offset));
+      mainParams.push(String(limit), String(offset));  // driver library mysql kadang error untuk limit dan offeset jadi ubah string atau number
 
       const [rows] = await pool.execute(mainQuery, mainParams);
       return res.status(200).json({
@@ -52,7 +52,7 @@ export default {
   },
   getCategoryById: async (req, res, next) => {
     try {
-      const {id} = req.validatedParams;
+      const {id} = req.validatedParams; // ambil dari hasil validate params zod
       const query =
         "SELECT id, category_code, name, created_at, updated_at FROM categories WHERE id = ? ";
       const [rows] = await pool.execute(query, [id]);
@@ -64,7 +64,7 @@ export default {
     }
   },
   createCategory: async (req, res, next) => {
-    const conn = await pool.getConnection();
+    const conn = await pool.getConnection(); // mengambil connection manual dari pool / database, ini harus dibalikin manual juga
     try {
       await conn.beginTransaction();
       const { name } = req.validatedBody;
@@ -72,7 +72,7 @@ export default {
         "SELECT category_code FROM categories ORDER BY id DESC"
       );
       const lastcode = code.length > 0 ? code[0].category_code : null;
-      const newCategoryCode = autoGenerateCode(lastcode, "CAT", 3);
+      const newCategoryCode = autoGenerateCode(lastcode, "CAT", 3); // memanggil fungsi generate code di  folder utils
 
       const [result] = await conn.execute(
         "INSERT INTO categories(category_code, name) VALUES (?,?)",
@@ -91,7 +91,7 @@ export default {
       await conn.rollback();
       next(error);
     } finally {
-      conn.release();
+      conn.release(); // mengembalikan connection yang diambil dari pool
     }
   },
   updateCategory: async (req, res, next) => {
