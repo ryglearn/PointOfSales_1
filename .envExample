@@ -1,0 +1,10 @@
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=point_of_sale_1
+DB_PORT=3306
+
+LISTEN_PORT=3000
+
+JWT_SECRET=masukan_secret_jwt_kamu_bebas
+JWT_EXPIRED=1h
