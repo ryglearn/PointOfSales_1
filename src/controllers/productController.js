@@ -1,3 +1,4 @@
+import { success } from "zod";
 import pool from "../config/db.js";
 import { autoGenerateCode } from "../utils/AutoGenerateCode.js";
 
@@ -58,7 +59,7 @@ export default {
         "SELECT p.*, c.name AS `categories` FROM products AS p JOIN categories AS c ON p.category_id = c.id WHERE p.id = ? ";
       const [rows] = await pool.execute(query, [id]);
       if (rows.length == 0)
-        return res.status(404).json({ message: "Data Tidak Ditemukan !" });
+        return res.status(404).json({success: false, message: "Data Tidak Ditemukan !" });
       return res.status(200).json(rows[0]);
     } catch (error) {
       next(error);
@@ -106,7 +107,7 @@ export default {
       const query = "UPDATE products SET name=?, price=?, stock=? WHERE id = ?";
       const [result] = await pool.execute(query, [name, price, stock, id]);
       if (result.affectedRows === 0)
-        return res.status(200).json({ message: "data tidak ditemukan" });
+        return res.status(200).json({success: false, message: "data tidak ditemukan" });
       return res.status(200).json({
         success: true,
         message: "data Telah diperbarui",
@@ -122,7 +123,7 @@ export default {
       let query = "DELETE FROM products WHERE id = ? ";
       const [result] = await pool.execute(query, [id]);
       if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Data Tidak Ditemukan" });
+        return res.status(404).json({success: false, message: "Data Tidak Ditemukan" });
       return res.status(204).send();
     } catch (error) {
       next(error);

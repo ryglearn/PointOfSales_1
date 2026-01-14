@@ -57,7 +57,7 @@ export default {
         "SELECT id, category_code, name, created_at, updated_at FROM categories WHERE id = ? ";
       const [rows] = await pool.execute(query, [id]);
       if (rows.length == 0)
-        return res.status(404).json({ message: "Data Tidak Ditemukan !" });
+        return res.status(404).json({success: false, message: "Data Tidak Ditemukan !" });
       return res.status(200).json(rows[0]);
     } catch (error) {
       next(error);
@@ -102,7 +102,7 @@ export default {
         "UPDATE categories SET name=? WHERE id = ?";
       const [result] = await pool.execute(query, [name, id]);
       if (result.affectedRows === 0)
-        return res.status(404).json({ message: "data tidak ditemukan" });
+        return res.status(404).json({success: false, message: "data tidak ditemukan" });
       return res
         .status(200)
         .json({
@@ -120,7 +120,7 @@ export default {
       let query = "DELETE FROM categories WHERE id = ? ";
       const [result] = await pool.execute(query, [id]);
       if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Data Tidak Ditemukan" });
+        return res.status(404).json({success: false, message: "Data Tidak Ditemukan" });
       return res.status(204).send();
     } catch (error) {
       next(error);

@@ -1,13 +1,12 @@
 import pool from "../config/db.js";
 import { autoGenerateCode } from "../utils/AutoGenerateCode.js";
-import bcrypt from "bcrypt";
 
 export default {
   getAllCustomer: async (req, res, next) => {
     try {
       // const page = parseInt(req.query.page) || 1;
       // const limit = parseInt(req.query.limit) || 10;
-      const {page, limit, search} = req.validatedQuery;
+      const { page, limit, search } = req.validatedQuery;
       const offset = (page - 1) * limit;
       // const search = req.query.search || "";
 
@@ -53,12 +52,14 @@ export default {
   },
   getCustomerById: async (req, res, next) => {
     try {
-      const {id} = req.validatedParams;
+      const { id } = req.validatedParams;
       const query =
         "SELECT id, customer_code, name, address, phone, created_at, updated_at FROM customers WHERE id = ? ";
       const [rows] = await pool.execute(query, [id]);
       if (rows.length == 0)
-        return res.status(404).json({ message: "Data Tidak Ditemukan !" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Data Tidak Ditemukan !" });
       return res.status(200).json(rows[0]);
     } catch (error) {
       next(error);
@@ -99,31 +100,33 @@ export default {
   },
   updateCustomer: async (req, res, next) => {
     try {
-      const {id} = req.validatedParams;
+      const { id } = req.validatedParams;
       const { name, address, phone } = req.validatedBody;
       const query =
         "UPDATE customers SET name=?, address=?, phone=? WHERE id = ?";
       const [result] = await pool.execute(query, [name, address, phone, id]);
       if (result.affectedRows === 0)
-        return res.status(200).json({ message: "data tidak ditemukan" });
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "data Telah diperbarui",
-          data: { id: id, name: name, address: address, phone: phone },
-        });
+        return res
+          .status(200)
+          .json({ success: false, message: "data tidak ditemukan" });
+      return res.status(200).json({
+        success: true,
+        message: "data Telah diperbarui",
+        data: { id: id, name: name, address: address, phone: phone },
+      });
     } catch (error) {
       next(error);
     }
   },
   deleteCustomer: async (req, res, next) => {
     try {
-      const {id} = req.validatedParams;
+      const { id } = req.validatedParams;
       let query = "DELETE FROM customers WHERE id = ? ";
       const [result] = await pool.execute(query, [id]);
       if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Data Tidak Ditemukan" });
+        return res
+          .status(404)
+          .json({ succes: false, message: "Data Tidak Ditemukan" });
       return res.status(204).send();
     } catch (error) {
       next(error);

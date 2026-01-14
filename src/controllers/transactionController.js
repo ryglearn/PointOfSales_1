@@ -1,4 +1,3 @@
-import { string } from "zod";
 import pool from "../config/db.js";
 import { autoGenerateCode } from "../utils/AutoGenerateCode.js";
 
@@ -59,7 +58,9 @@ export default {
       const params = [id];
       const [rows] = await pool.execute(query, params);
       if (rows.length === 0)
-        return res.status(404).json({ message: "Data Tidak ditemukan" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Data Tidak ditemukan" });
       return res.status(200).json({ success: true, data: rows });
     } catch (error) {
       next(error);
