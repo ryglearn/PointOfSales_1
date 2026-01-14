@@ -9,7 +9,7 @@ const router = express.Router();
 router.get(
   "/",
   authMiddleware,
-  authorize("admin"),
+  authorize("admin", "staff"),
   validate.validateQuery(productSchema.getAllProductQuery),
   productController.getAllproduct
 );

@@ -17,7 +17,7 @@ router.get(
 router.get(
   "/:id",
   authMiddleware,
-  authorize("admin"),
+  authorize("admin", "staff"),
   validate.validateParams(categorySchema.paramsId),
   categoryController.getCategoryById
 );
