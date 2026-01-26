@@ -5,10 +5,7 @@ import bcrypt from "bcrypt";
 export default {
   getAllUser: async (req, res, next) => {
     try {
-      const { page, limit, search } = req.validatedQuery;
-      // const page = parseInt(req.query.page) || 1;
-      // const limit = parseInt(req.query.limit) || 10;
-      // const search = req.query.search || "";
+      const { page, limit, search, role, order } = req.validatedQuery;
       const offset = (page - 1) * limit;
 
       let countQuery = "SELECT COUNT(*) as total FROM users";
@@ -17,6 +14,18 @@ export default {
       if (search) {
         countQuery += " WHERE user_code LIKE ? OR name LIKE ?";
         countParams.push(`%${search}%`, `%${search}%`);
+      }
+      if (role === "staff") {
+        search
+          ? (countQuery += " AND role = ?")
+          : (countQuery += " WHERE role = ?");
+        countParams.push("staff");
+      }
+      if (role === "admin") {
+        search
+          ? (countQuery += " AND role = ?")
+          : (countQuery += " WHERE role = ?");
+        countParams.push("admin");
       }
 
       const [countRows] = await pool.execute(countQuery, countParams);
@@ -32,8 +41,21 @@ export default {
         mainQuery += " WHERE user_code LIKE ? OR name LIKE ?";
         mainParams.push(`%${search}%`, `%${search}%`);
       }
-
-      mainQuery += " ORDER BY id DESC LIMIT ? OFFSET ?";
+      if (role === "staff") {
+        search
+          ? (mainQuery += " AND role = ?")
+          : (mainQuery += " WHERE role = ?");
+        mainParams.push("staff");
+      }
+      if (role === "admin") {
+        search
+          ? (mainQuery += " AND role = ?")
+          : (mainQuery += " WHERE role = ?");
+        mainParams.push("admin");
+      }
+      
+      order === 'desc' ? mainQuery += " ORDER BY id DESC " : mainQuery += " ORDER BY id ASC "
+      mainQuery += " LIMIT ? OFFSET ?";
       mainParams.push(String(limit), String(offset));
 
       const [rows] = await pool.execute(mainQuery, mainParams);
@@ -85,7 +107,7 @@ export default {
       );
       await conn.commit();
       return res.status(201).json({
-        succes: true,
+        success: true,
         message: "Data Telah Ditambahkan",
         data: { user_code: newUserCode, name: name, email: email, role: role },
       });
@@ -102,12 +124,12 @@ export default {
       await conn.beginTransaction();
       const { id } = req.validatedParams;
       const { name, email, password, role } = req.validatedBody;
-      const hashedPassword = await bcrypt.hash(password, 10);
-
+      
       let query = "UPDATE users SET name=?, email=?, role=? ";
       let params = [name, email, role];
-
+      
       if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
         query += " , password= ?";
         params.push(hashedPassword);
       }
@@ -124,7 +146,7 @@ export default {
           .json({ success: false, message: "Data Tidak Ditemukan" });
       return res.status(200).json({
         success: true,
-        message: "Data Telah Ditambahkan",
+        message: "Data Telah Di Perbarui",
         data: { id: id, name: name, email: email, role: role },
       });
     } catch (error) {
@@ -140,7 +162,9 @@ export default {
       let query = "DELETE FROM users WHERE id = ? ";
       const [result] = await pool.execute(query, [id]);
       if (result.affectedRows === 0)
-        return res.status(404).json({successL: false,  message: "Data Tidak Ditemukan" });
+        return res
+          .status(404)
+          .json({ successL: false, message: "Data Tidak Ditemukan" });
       return res.status(204).send();
     } catch (error) {
       next(error);

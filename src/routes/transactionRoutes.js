@@ -16,14 +16,14 @@ router.get(
 router.get(
   "/",
   authMiddleware,
-  authorize("staff"),
+  authorize("staff", "admin"),
   validate.validateQuery(transactionSchema.getAllTransactionQuery),
   transactionController.getAllTransaction
 );
 router.get(
   "/:id",
   authMiddleware,
-  authorize("staff"),
+  authorize("staff", "admin"),
   validate.validateParams(transactionSchema.paramsId),
   transactionController.getTransactionById
 );
@@ -37,7 +37,7 @@ router.post(
 router.delete(
   "/:id",
   authMiddleware,
-  authorize("staff"),
+  authorize("staff", "admin"),
   validate.validateParams(transactionSchema.paramsId),
   transactionController.deleteTransaction
 );

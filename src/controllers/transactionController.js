@@ -57,11 +57,24 @@ export default {
         "SELECT t.*, u.name AS `CASHIER`, c.name AS `CUSTOMERS` FROM transactions AS t JOIN users AS u ON t.user_id = u.id JOIN customers AS c ON t.customer_id = c.id  WHERE t.id = ? ";
       const params = [id];
       const [rows] = await pool.execute(query, params);
+      
       if (rows.length === 0)
         return res
           .status(404)
           .json({ success: false, message: "Data Tidak ditemukan" });
-      return res.status(200).json({ success: true, data: rows });
+
+      const [items] = await pool.execute(
+        "SELECT it.*, p.name as product_name, p.product_code FROM items_transactions it JOIN products p ON it.product_id = p.id WHERE it.transaction_id = ?",
+        [id]
+      );
+
+      return res.status(200).json({ 
+        success: true, 
+        data: { 
+          ...rows[0], 
+          items: items 
+        } 
+      });
     } catch (error) {
       next(error);
     }
@@ -77,14 +90,14 @@ export default {
       //   return res.status(400).json({ message: "Data tidak lengkap" });
       // }
       const [trxCode] = await conn.execute(
-        "SELECT transaction_code FROM transactions ORDER BY id DESC LIMIT 1 FOR UPDATE"
+        "SELECT transaction_code FROM transactions ORDER BY id DESC LIMIT 1 FOR UPDATE",
       );
       const lastCode = trxCode.length ? trxCode[0].transaction_code : null;
       const newTrxCode = autoGenerateCode(lastCode, "INVOICE", 3);
 
       const [trxHeader] = await conn.execute(
         "INSERT INTO transactions(transaction_code, user_id, customer_id) VALUES (?,?,?)",
-        [newTrxCode, user_id, customer_id]
+        [newTrxCode, user_id, customer_id],
       );
 
       const transactionId = trxHeader.insertId;
@@ -97,7 +110,7 @@ export default {
 
         const [products] = await conn.execute(
           "SELECT price, stock FROM products WHERE id = ? FOR UPDATE",
-          [product_id]
+          [product_id],
         );
 
         if (products.length === 0)
@@ -114,12 +127,12 @@ export default {
 
         await conn.execute(
           "INSERT INTO items_transactions(transaction_id, product_id, on_sales_price, qty) VALUES (?,?,?,?)",
-          [transactionId, product_id, product.price, qty]
+          [transactionId, product_id, product.price, qty],
         );
 
         await conn.execute(
           "UPDATE products SET stock = stock - ? WHERE id = ?",
-          [qty, product_id]
+          [qty, product_id],
         );
 
         grandTotal += subtotal;
@@ -133,6 +146,10 @@ export default {
           subtotal,
         });
       }
+      await conn.execute(
+        "UPDATE transactions SET total_price = ? WHERE id = ?",
+        [grandTotal, transactionId],
+      );
       await conn.commit();
 
       res.status(201).json({
@@ -158,25 +175,25 @@ export default {
       const { id } = req.validatedParams;
       const [trx] = await conn.execute(
         "SELECT id FROM transactions WHERE id = ?",
-        [id]
+        [id],
       );
       if (trx.length === 0) {
         return res.status(404).json({ message: "Transaksi tidak ditemukan" });
       }
       const [items] = await conn.execute(
         "SELECT product_id, qty FROM items_transactions WHERE transaction_id = ?",
-        [id]
+        [id],
       );
       for (const item of items) {
         const { product_id, qty } = item;
         await conn.execute(
           "UPDATE products SET stock = stock + ? WHERE id = ?",
-          [qty, product_id]
+          [qty, product_id],
         );
       }
       await conn.execute(
         "DELETE FROM items_transactions WHERE transaction_id = ?",
-        [id]
+        [id],
       );
       await conn.execute("DELETE FROM transactions WHERE id = ?", [id]);
       await conn.commit();

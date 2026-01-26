@@ -4,6 +4,8 @@ export const getAllUserQuery = z.object({
   page: z.coerce.number().min(1, "minimal page = 1 !").default(1),
   limit: z.coerce.number().min(1, "minimal limit = 1 !").max(100).default(10),
   search: z.coerce.string().optional(),
+  role: z.coerce.string().default(""),
+  order: z.enum(["desc", "asc"]).default("asc")
 });
 
 export const paramsId = z.object({
