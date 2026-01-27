@@ -4,11 +4,8 @@ import { autoGenerateCode } from "../utils/AutoGenerateCode.js";
 export default {
   getAllCustomer: async (req, res, next) => {
     try {
-      // const page = parseInt(req.query.page) || 1;
-      // const limit = parseInt(req.query.limit) || 10;
       const { page, limit, search } = req.validatedQuery;
       const offset = (page - 1) * limit;
-      // const search = req.query.search || "";
 
       let countQuery = "SELECT COUNT(*) as total FROM customers";
       let countParams = [];

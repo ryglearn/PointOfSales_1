@@ -5,10 +5,8 @@ export default {
   getAllTransaction: async (req, res, next) => {
     try {
       const { page, limit, search } = req.validatedQuery;
-      // const page = parseInt(req.query.page) || 1;
-      // const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
-      // const search = req.query.search || "";
+
 
       let countQuery = "SELECT COUNT(*) as total FROM transactions";
       let countParams = [];
@@ -86,9 +84,6 @@ export default {
 
       const { customer_id, items } = req.validatedBody;
       const user_id = req.user.id;
-      // if (!user_id || !customer_id || !items?.length) {
-      //   return res.status(400).json({ message: "Data tidak lengkap" });
-      // }
       const [trxCode] = await conn.execute(
         "SELECT transaction_code FROM transactions ORDER BY id DESC LIMIT 1 FOR UPDATE",
       );
